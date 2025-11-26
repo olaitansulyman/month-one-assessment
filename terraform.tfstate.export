@@ -1,0 +1,80 @@
+{
+  "version": 4,
+  "terraform_version": "1.5.7",
+  "serial": 31,
+  "lineage": "REDACTED",
+  "outputs": {
+    "bastion_public_ip": {
+      "value": "XX.XXX.X.XX",
+      "type": "string"
+    },
+    "database_private_ip": {
+      "value": "10.0.3.XXX",
+      "type": "string"
+    },
+    "load_balancer_dns": {
+      "value": "dev-alb-XXXXXXXXXX.us-east-1.elb.amazonaws.com",
+      "type": "string"
+    },
+    "private_subnet_ids": {
+      "value": [
+        "subnet-XXXXXXXXXXXXXXXXX",
+        "subnet-XXXXXXXXXXXXXXXXX"
+      ],
+      "type": [
+        "tuple",
+        [
+          "string",
+          "string"
+        ]
+      ]
+    },
+    "public_subnet_ids": {
+      "value": [
+        "subnet-XXXXXXXXXXXXXXXXX",
+        "subnet-XXXXXXXXXXXXXXXXX"
+      ],
+      "type": [
+        "tuple",
+        [
+          "string",
+          "string"
+        ]
+      ]
+    },
+    "vpc_id": {
+      "value": "vpc-XXXXXXXXXXXXXXXXX",
+      "type": "string"
+    },
+    "web_server_private_ips": {
+      "value": [
+        "10.0.3.XXX",
+        "10.0.4.XXX"
+      ],
+      "type": [
+        "tuple",
+        [
+          "string",
+          "string"
+        ]
+      ]
+    }
+  },
+  "resources": [
+    {
+      "note": "Resource details have been removed for security. This export contains only the structure and non-sensitive metadata.",
+      "total_resources": "Multiple AWS resources including VPC, subnets, security groups, instances, load balancer, and NAT gateways",
+      "resource_types": [
+        "aws_vpc",
+        "aws_subnet", 
+        "aws_security_group",
+        "aws_instance",
+        "aws_lb",
+        "aws_nat_gateway",
+        "aws_eip",
+        "aws_route_table",
+        "aws_internet_gateway"
+      ]
+    }
+  ]
+}

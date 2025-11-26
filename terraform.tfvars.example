@@ -1,0 +1,26 @@
+# Example Terraform variables file
+# Copy this file to terraform.tfvars and update with your values
+
+# AWS Region
+aws_region = "us-east-1"
+
+# Environment name
+environment = "dev"
+
+# VPC CIDR block
+vpc_cidr = "10.0.0.0/16"
+
+# Instance type for web servers
+web_instance_type = "t3.micro"
+
+# Instance type for database server
+db_instance_type = "t3.small"
+
+# Key pair name for EC2 instances (required)
+key_name = "Olaitan VM1"
+
+# Instance type for bastion host
+bastion_instance_type = "t3.micro"
+
+# Your current IP address for bastion access (CIDR format)
+my_ip = "0.0.0.0/32"
