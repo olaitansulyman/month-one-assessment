@@ -153,9 +153,9 @@ resource "aws_security_group" "bastion" {
   }
 }
 
-resource "aws_security_group" "web" {
-  name        = "web-sg"
-  description = "Web server security group"
+resource "aws_security_group" "alb" {
+  name        = "alb-sg"
+  description = "Public HTTP ingress for the Application Load Balancer"
   vpc_id      = aws_vpc.main.id
 
   ingress {
@@ -165,12 +165,13 @@ resource "aws_security_group" "web" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  ingress {
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
+}
+
+resource "aws_security_group" "web" {
+  name        = "web-sg"
+  description = "Private web server security group; HTTP only from the ALB"
+  vpc_id      = aws_vpc.main.id
+
 
   ingress {
     from_port       = 22
@@ -185,6 +186,25 @@ resource "aws_security_group" "web" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+}
+
+# Separate rule resources avoid a dependency cycle between the ALB and web security groups.
+resource "aws_vpc_security_group_egress_rule" "alb_to_web_http" {
+  security_group_id            = aws_security_group.alb.id
+  referenced_security_group_id = aws_security_group.web.id
+  ip_protocol                  = "tcp"
+  from_port                    = 80
+  to_port                      = 80
+  description                  = "Allow the ALB to reach web instances over HTTP"
+}
+
+resource "aws_vpc_security_group_ingress_rule" "web_from_alb_http" {
+  security_group_id            = aws_security_group.web.id
+  referenced_security_group_id = aws_security_group.alb.id
+  ip_protocol                  = "tcp"
+  from_port                    = 80
+  to_port                      = 80
+  description                  = "Allow HTTP only from the ALB security group"
 }
 
 resource "aws_security_group" "db" {
@@ -219,7 +239,7 @@ resource "aws_lb" "main" {
   name               = "${var.environment}-alb"
   internal           = false
   load_balancer_type = "application"
-  security_groups    = [aws_security_group.web.id]
+  security_groups    = [aws_security_group.alb.id]
   subnets            = aws_subnet.public[*].id
 
   tags = {
@@ -264,14 +284,6 @@ resource "aws_instance" "bastion" {
   key_name               = var.key_name
   vpc_security_group_ids = [aws_security_group.bastion.id]
   subnet_id              = aws_subnet.public[0].id
-  user_data              = <<-EOF
-#!/bin/bash
-apt update -y
-useradd -m admin
-echo "admin:TechCorp2024!" | chpasswd
-sed -i 's/^PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
-systemctl restart sshd
-EOF
 
   tags = {
     Name = "bastion-host"
@@ -290,7 +302,7 @@ resource "aws_instance" "web" {
   key_name               = var.key_name
   vpc_security_group_ids = [aws_security_group.web.id]
   subnet_id              = aws_subnet.private[count.index].id
-  user_data              = base64encode(file("${path.module}/user_data/web_server_setup.sh"))
+  user_data              = file("${path.module}/user_data/web_server_setup.sh")
 
   tags = {
     Name = "web-server-${count.index + 1}"
@@ -303,7 +315,7 @@ resource "aws_instance" "db" {
   key_name               = var.key_name
   vpc_security_group_ids = [aws_security_group.db.id]
   subnet_id              = aws_subnet.private[0].id
-  user_data              = base64encode(file("${path.module}/user_data/db_server_setup.sh"))
+  user_data              = file("${path.module}/user_data/db_server_setup.sh")
 
   tags = {
     Name = "database-server"

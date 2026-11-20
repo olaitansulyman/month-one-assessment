@@ -1,21 +1,16 @@
-# Terraform state files
-terraform.tfstate
-terraform.tfstate.*
-!terraform.tfstate.export
-
-# Terraform directories
-.terraform/
-.terraform.lock.hcl
-
-# Variable files with sensitive data
-terraform.tfvars
-*.auto.tfvars
-
-# Crash log files
+# Terraform state and plan files (state may contain secrets)
+*.tfstate
+*.tfstate.*
+*.tfplan
 crash.log
 crash.*.log
 
-# Override files
+# Terraform working directory
+.terraform/
+
+# Local variable files and overrides
+terraform.tfvars
+*.auto.tfvars
 override.tf
 override.tf.json
 *_override.tf
@@ -24,3 +19,6 @@ override.tf.json
 # CLI configuration files
 .terraformrc
 terraform.rc
+
+# macOS metadata
+.DS_Store
