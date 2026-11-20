@@ -1,22 +1,23 @@
 #!/bin/bash
-# Web server setup script
+set -euo pipefail
 
-# Update system
-sudo apt update -y
+# EC2 user data runs as root.
+apt-get update -y
+DEBIAN_FRONTEND=noninteractive apt-get install -y apache2
+systemctl enable --now apache2
 
-# Install Apache web server
-sudo apt install -y apache2
+cat > /var/www/html/index.html <<'HTML'
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Terraform Web Tier</title></head>
+<body>
+  <h1>Web server provisioned by Terraform</h1>
+  <p>Instance hostname: PLACEHOLDER</p>
+</body>
+</html>
+HTML
 
-# Start and enable Apache
-sudo systemctl start apache2
-sudo systemctl enable apache2
+sed -i "s/PLACEHOLDER/$(hostname)/" /var/www/html/index.html
 
-# Create a simple index page
-echo "<h1>Web Server - $(hostname)</h1>" | sudo tee /var/www/html/index.html
-echo "<p>Instance ID: $(curl -s http://169.254.169.254/latest/meta-data/instance-id)</p>" | sudo tee -a /var/www/html/index.html
-
-# Setup user for bastion access
-sudo useradd -m webuser
-echo "webuser:TechCorp2024!" | sudo chpasswd
-sudo sed -i 's/^PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
-sudo systemctl restart sshd
+# SSH access is key-based through the bastion security group.
+# Do not create password-authenticated users or enable SSH password login here.
