@@ -153,9 +153,9 @@ resource "aws_security_group" "bastion" {
   }
 }
 
-resource "aws_security_group" "web" {
-  name        = "web-sg"
-  description = "Web server security group"
+resource "aws_security_group" "alb" {
+  name        = "alb-sg"
+  description = "Public HTTP ingress for the Application Load Balancer"
   vpc_id      = aws_vpc.main.id
 
   ingress {
@@ -165,11 +165,24 @@ resource "aws_security_group" "web" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  egress {
+    from_port       = 80
+    to_port         = 80
+    protocol        = "tcp"
+    security_groups = [aws_security_group.web.id]
+  }
+}
+
+resource "aws_security_group" "web" {
+  name        = "web-sg"
+  description = "Private web server security group; HTTP only from the ALB"
+  vpc_id      = aws_vpc.main.id
+
   ingress {
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    from_port       = 80
+    to_port         = 80
+    protocol        = "tcp"
+    security_groups = [aws_security_group.alb.id]
   }
 
   ingress {
@@ -219,7 +232,7 @@ resource "aws_lb" "main" {
   name               = "${var.environment}-alb"
   internal           = false
   load_balancer_type = "application"
-  security_groups    = [aws_security_group.web.id]
+  security_groups    = [aws_security_group.alb.id]
   subnets            = aws_subnet.public[*].id
 
   tags = {
