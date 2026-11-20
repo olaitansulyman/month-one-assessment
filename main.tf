@@ -264,14 +264,6 @@ resource "aws_instance" "bastion" {
   key_name               = var.key_name
   vpc_security_group_ids = [aws_security_group.bastion.id]
   subnet_id              = aws_subnet.public[0].id
-  user_data              = <<-EOF
-#!/bin/bash
-apt update -y
-useradd -m admin
-echo "admin:TechCorp2024!" | chpasswd
-sed -i 's/^PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
-systemctl restart sshd
-EOF
 
   tags = {
     Name = "bastion-host"
@@ -290,7 +282,7 @@ resource "aws_instance" "web" {
   key_name               = var.key_name
   vpc_security_group_ids = [aws_security_group.web.id]
   subnet_id              = aws_subnet.private[count.index].id
-  user_data              = base64encode(file("${path.module}/user_data/web_server_setup.sh"))
+  user_data              = file("${path.module}/user_data/web_server_setup.sh")
 
   tags = {
     Name = "web-server-${count.index + 1}"
@@ -303,7 +295,7 @@ resource "aws_instance" "db" {
   key_name               = var.key_name
   vpc_security_group_ids = [aws_security_group.db.id]
   subnet_id              = aws_subnet.private[0].id
-  user_data              = base64encode(file("${path.module}/user_data/db_server_setup.sh"))
+  user_data              = file("${path.module}/user_data/db_server_setup.sh")
 
   tags = {
     Name = "database-server"
