@@ -165,12 +165,6 @@ resource "aws_security_group" "alb" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  egress {
-    from_port       = 80
-    to_port         = 80
-    protocol        = "tcp"
-    security_groups = [aws_security_group.web.id]
-  }
 }
 
 resource "aws_security_group" "web" {
@@ -178,12 +172,6 @@ resource "aws_security_group" "web" {
   description = "Private web server security group; HTTP only from the ALB"
   vpc_id      = aws_vpc.main.id
 
-  ingress {
-    from_port       = 80
-    to_port         = 80
-    protocol        = "tcp"
-    security_groups = [aws_security_group.alb.id]
-  }
 
   ingress {
     from_port       = 22
@@ -198,6 +186,25 @@ resource "aws_security_group" "web" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+}
+
+# Separate rule resources avoid a dependency cycle between the ALB and web security groups.
+resource "aws_vpc_security_group_egress_rule" "alb_to_web_http" {
+  security_group_id            = aws_security_group.alb.id
+  referenced_security_group_id = aws_security_group.web.id
+  ip_protocol                  = "tcp"
+  from_port                    = 80
+  to_port                      = 80
+  description                  = "Allow the ALB to reach web instances over HTTP"
+}
+
+resource "aws_vpc_security_group_ingress_rule" "web_from_alb_http" {
+  security_group_id            = aws_security_group.web.id
+  referenced_security_group_id = aws_security_group.alb.id
+  ip_protocol                  = "tcp"
+  from_port                    = 80
+  to_port                      = 80
+  description                  = "Allow HTTP only from the ALB security group"
 }
 
 resource "aws_security_group" "db" {
