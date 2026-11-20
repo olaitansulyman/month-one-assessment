@@ -13,6 +13,7 @@ A learning project that provisions a small AWS network and compute environment w
 - Two Apache web instances in private subnets, registered as ALB targets
 - One PostgreSQL EC2 instance in a private subnet
 - Bastion host in a public subnet with SSH ingress restricted by `my_ip`
+- Separate ALB and web security groups; private web instances accept HTTP only from the ALB security group
 - Security groups limiting database port 5432 to the web security group
 
 **Note:** The current configuration uses two fixed web EC2 instances; it does not create an Auto Scaling Group. The ALB listener is HTTP only; HTTPS/TLS termination is not configured in this version.
