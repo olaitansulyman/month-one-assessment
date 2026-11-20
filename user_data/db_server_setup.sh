@@ -1,24 +1,13 @@
 #!/bin/bash
-# Database server setup script
+set -euo pipefail
 
-# Update system
-apt update -y
+# EC2 user data runs as root.
+apt-get update -y
+DEBIAN_FRONTEND=noninteractive apt-get install -y postgresql postgresql-contrib
+systemctl enable --now postgresql
 
-# Install PostgreSQL
-apt install -y postgresql postgresql-contrib
-
-# Start and enable PostgreSQL
-systemctl start postgresql
-systemctl enable postgresql
-
-# Configure PostgreSQL
-sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'TechCorp2024!';"
-sudo -u postgres createdb appdb
-sudo -u postgres psql -c "CREATE USER appuser WITH PASSWORD 'AppPassword123!';"
-sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE appdb TO appuser;"
-
-# Setup user for bastion access
-useradd -m dbuser
-echo "dbuser:TechCorp2024!" | chpasswd
-sed -i 's/^PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
-systemctl restart sshd
+# Create an empty application database. Configure the application role and
+# password separately through a secure administrative session/secret manager.
+# Never bake database passwords into user data: EC2 user data is retrievable
+# by principals with instance access and can also be represented in Terraform state.
+sudo -u postgres psql --set ON_ERROR_STOP=1 -c "CREATE DATABASE appdb;"
